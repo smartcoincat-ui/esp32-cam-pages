@@ -1,56 +1,146 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ESP32-CAM Viewer</title>
-  <style>
-    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;max-width:920px;margin:24px auto;padding:0 16px;background:#0f172a;color:#e2e8f0}
-    .card{background:#111827;border:1px solid #334155;border-radius:16px;padding:16px;margin-bottom:16px}
-    input{width:100%;padding:10px;border-radius:10px;border:1px solid #475569;background:#0b1220;color:#e2e8f0}
-    button{padding:10px 14px;border:0;border-radius:10px;background:#2563eb;color:#fff;font-weight:600;cursor:pointer}
-    .row{display:flex;gap:10px;flex-wrap:wrap}
-    img,video{max-width:100%;border-radius:12px;border:1px solid #475569;background:#000}
-    small{color:#94a3b8}
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Умный горшок — One Pot</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <h1>ESP32-CAM Viewer</h1>
-  <div class="card">
-    <label>Базовый URL камеры (пример: http://192.168.0.102)</label>
-    <input id="base" placeholder="http://192.168.0.102" />
-    <div class="row" style="margin-top:10px">
-      <button id="save">Сохранить</button>
-      <button id="openStream">Открыть поток</button>
-      <button id="snap">Сделать снимок</button>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-top">
+                <h1 class="title">🌱 Умный горшок — One Pot</h1>
+                <div class="status-badge" id="statusBadge">
+                    <span class="status-dot" id="statusDot"></span>
+                    <span id="statusText">Подключение...</span>
+                </div>
+            </div>
+            <div class="header-bottom">
+                <p class="last-update">Последнее обновление: <span id="lastUpdate">—</span></p>
+            </div>
+        </header>
+
+        <!-- KPI Cards -->
+        <section class="kpi-section">
+            <div class="kpi-card">
+                <div class="kpi-icon">💧</div>
+                <div class="kpi-content">
+                    <p class="kpi-label">Влажность почвы</p>
+                    <p class="kpi-value" id="moisturePct">—</p>
+                    <p class="kpi-unit">%</p>
+                </div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-icon">🌡️</div>
+                <div class="kpi-content">
+                    <p class="kpi-label">Температура почвы</p>
+                    <p class="kpi-value" id="soilTemp">—</p>
+                    <p class="kpi-unit">°C</p>
+                </div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-icon">🌤️</div>
+                <div class="kpi-content">
+                    <p class="kpi-label">Температура воздуха</p>
+                    <p class="kpi-value" id="airTemp">—</p>
+                    <p class="kpi-unit">°C</p>
+                </div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-icon">💨</div>
+                <div class="kpi-content">
+                    <p class="kpi-label">Влажность воздуха</p>
+                    <p class="kpi-value" id="airHumidity">—</p>
+                    <p class="kpi-unit">%</p>
+                </div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-icon">📊</div>
+                <div class="kpi-content">
+                    <p class="kpi-label">Сырой сигнал</p>
+                    <p class="kpi-value" id="soilRaw">—</p>
+                    <p class="kpi-unit">единиц</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Recommendations -->
+        <section class="recommendations" id="recommendations">
+            <div class="recommendation-content">
+                <div class="recommendation-icon" id="recommendationIcon">ℹ️</div>
+                <div>
+                    <h3 class="recommendation-title">Рекомендация</h3>
+                    <p class="recommendation-text" id="recommendationText">Загрузка данных...</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Chart Section -->
+        <section class="chart-section">
+            <h2 class="section-title">История за 24 часа</h2>
+            <div class="chart-container">
+                <canvas id="historyChart"></canvas>
+            </div>
+        </section>
+
+        <!-- Camera Section -->
+        <section class="camera-section">
+            <h2 class="section-title">Камера</h2>
+            <div class="camera-grid">
+                <div class="camera-snapshot">
+                    <img id="cameraSnapshot" src="" alt="Снимок камеры" class="snapshot-img">
+                    <div class="snapshot-overlay" id="snapshotOverlay">
+                        <p>Загрузка...</p>
+                    </div>
+                </div>
+                <div class="camera-controls">
+                    <button class="btn btn-primary" id="refreshSnapshot">🔄 Обновить снимок</button>
+                    <button class="btn btn-secondary" id="openStream">📹 Открыть live stream</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Diagnostics -->
+        <section class="diagnostics">
+            <h2 class="section-title">Диагностика</h2>
+            <div class="diagnostics-grid">
+                <div class="diagnostic-item">
+                    <span class="diagnostic-label">Устройство:</span>
+                    <span class="diagnostic-value" id="diagDevice">—</span>
+                </div>
+                <div class="diagnostic-item">
+                    <span class="diagnostic-label">ID горшка:</span>
+                    <span class="diagnostic-value" id="diagPotId">—</span>
+                </div>
+                <div class="diagnostic-item">
+                    <span class="diagnostic-label">Качество связи:</span>
+                    <span class="diagnostic-value" id="diagQuality">—</span>
+                </div>
+                <div class="diagnostic-item">
+                    <span class="diagnostic-label">Код ответа API:</span>
+                    <span class="diagnostic-value" id="diagApiCode">—</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Smart Planter Dashboard © 2024 | Production Ready</p>
+        </footer>
     </div>
-    <p><small>Для ESP32-CAM обычно: поток <code>:81/stream</code>, кадр <code>/capture</code>.</small></p>
-  </div>
 
-  <div class="card">
-    <h3>Поток</h3>
-    <img id="stream" alt="stream" />
-  </div>
-
-  <div class="card">
-    <h3>Последний снимок</h3>
-    <img id="shot" alt="snapshot" />
-  </div>
-
-<script>
-const baseInput = document.getElementById('base');
-const streamEl = document.getElementById('stream');
-const shotEl = document.getElementById('shot');
-const key='esp32_base_url';
-baseInput.value = localStorage.getItem(key) || 'http://192.168.0.102';
-function base(){ return baseInput.value.replace(/\/$/, ''); }
-function applyStream(){ streamEl.src = `${base()}:81/stream`; }
-function snap(){ shotEl.src = `${base()}/capture?t=${Date.now()}`; }
-document.getElementById('save').onclick = () => { localStorage.setItem(key, baseInput.value.trim()); alert('Сохранено'); };
-document.getElementById('openStream').onclick = applyStream;
-document.getElementById('snap').onclick = snap;
-applyStream();
-snap();
-</script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- App Script -->
+    <script src="app.js"></script>
 </body>
 </html>
