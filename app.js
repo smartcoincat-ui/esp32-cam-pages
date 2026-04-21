@@ -110,7 +110,7 @@ async function fetchWeather() {
         if (backendResp.ok) {
             const data = await backendResp.json();
             const c = data.current || {};
-            if (el) el.textContent = `Сейчас: ${c.temperature_2m ?? '—'}°C, влажность ${c.relative_humidity_2m ?? '—'}%, ветер ${c.wind_speed_10m ?? '—'} м/с, осадки ${c.precipitation ?? '—'} мм`;
+            if (el) el.textContent = `🌡️ ${c.temperature_2m ?? '—'}°C   💧 ${c.relative_humidity_2m ?? '—'}%   💨 ${c.wind_speed_10m ?? '—'} м/с   🌧️ ${c.precipitation ?? '—'} мм`;
             return;
         }
 
@@ -127,7 +127,7 @@ async function fetchWeather() {
             const aq = (aData && aData.current) || {};
 
             if (el) {
-                el.textContent = `Сейчас: ${c.temperature_2m ?? '—'}°C, влажность ${c.relative_humidity_2m ?? '—'}%, давление ${c.surface_pressure ?? '—'} hPa, ветер ${c.wind_speed_10m ?? '—'} м/с, осадки ${c.precipitation ?? '—'} мм, AQI ${aq.european_aqi ?? '—'}, PM2.5 ${aq.pm2_5 ?? '—'}, PM10 ${aq.pm10 ?? '—'}`;
+                el.textContent = `🌡️ ${c.temperature_2m ?? '—'}°C   💧 ${c.relative_humidity_2m ?? '—'}%   🧭 ${c.surface_pressure ?? '—'} hPa   💨 ${c.wind_speed_10m ?? '—'} м/с   🌧️ ${c.precipitation ?? '—'} мм   🌫️ AQI ${aq.european_aqi ?? '—'}   PM2.5 ${aq.pm2_5 ?? '—'}   PM10 ${aq.pm10 ?? '—'}`;
             }
         } catch (e2) {
             if (el) el.textContent = 'Погода временно недоступна';
