@@ -11,9 +11,7 @@ const CONFIG = {
     weatherLon: 37.7658,
     cameraHost: 'https://cam.103.74.92.75.nip.io',
     cameraStreamPath: '/stream',
-    cameraCapturePath: '/capture',
-    cameraAuthUser: 'cam',
-    cameraAuthPass: 'CamAccess2026'
+    cameraCapturePath: '/capture'
 };
 
 // ===============================================
@@ -140,7 +138,7 @@ async function fetchWeather() {
     }
 }
 
-async function loadCameraSnapshot() {
+function loadCameraSnapshot() {
     const img = document.getElementById('cameraStream');
     const overlay = document.getElementById('snapshotOverlay');
 
@@ -150,29 +148,15 @@ async function loadCameraSnapshot() {
     const timestamp = new Date().getTime();
     const snapshotURL = `${CONFIG.cameraHost}${CONFIG.cameraCapturePath}?t=${timestamp}`;
 
-    try {
-        const credentials = btoa(`${CONFIG.cameraAuthUser}:${CONFIG.cameraAuthPass}`);
-        const resp = await fetch(snapshotURL, {
-            headers: {
-                'Authorization': `Basic ${credentials}`,
-                'Accept': 'image/jpeg'
-            },
-            cache: 'no-store'
-        });
+    img.onload = () => {
+        overlay.classList.add('hidden');
+    };
 
-        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-
-        const blob = await resp.blob();
-        const objUrl = URL.createObjectURL(blob);
-        const oldSrc = img.src;
-        img.onload = () => {
-            overlay.classList.add('hidden');
-            if (oldSrc.startsWith('blob:')) URL.revokeObjectURL(oldSrc);
-        };
-        img.src = objUrl;
-    } catch (e) {
+    img.onerror = () => {
         overlay.innerHTML = '<p>❌ Камера недоступна</p>';
-    }
+    };
+
+    img.src = snapshotURL;
 }
 
 // ===============================================
