@@ -11,7 +11,9 @@ const CONFIG = {
     weatherLon: 37.7658,
     cameraHost: 'https://cam.103.74.92.75.nip.io',
     cameraStreamPath: '/stream',
-    cameraCapturePath: '/capture'
+    cameraCapturePath: '/capture',
+    cameraAuthUser: 'cam',
+    cameraAuthPass: 'CamAccess2026'
 };
 
 // ===============================================
@@ -143,24 +145,21 @@ function loadCameraSnapshot() {
     const overlay = document.getElementById('snapshotOverlay');
 
     overlay.classList.remove('hidden');
-    overlay.innerHTML = '<p>Подключение к live...</p>';
+    overlay.innerHTML = '<p>Загрузка видео...</p>';
 
     const timestamp = new Date().getTime();
-    const streamURL = `${CONFIG.cameraHost}${CONFIG.cameraStreamPath}?t=${timestamp}`;
-    const fallbackSnapshotURL = `${CONFIG.cameraHost}${CONFIG.cameraCapturePath}?t=${timestamp}`;
+    // Надёжный режим: частое обновление JPEG-кадра через внешний HTTPS домен
+    const snapshotURL = `${CONFIG.cameraHost}${CONFIG.cameraCapturePath}?t=${timestamp}`;
 
     img.onload = () => {
         overlay.classList.add('hidden');
     };
 
     img.onerror = () => {
-        // fallback на snapshot, если live недоступен/блокируется браузером
-        img.src = fallbackSnapshotURL;
-        overlay.innerHTML = '<p>Live недоступен, показан снимок</p>';
-        setTimeout(() => overlay.classList.add('hidden'), 1500);
+        overlay.innerHTML = '<p>❌ Нет доступа к камере (проверь авторизацию cam)</p>';
     };
 
-    img.src = streamURL;
+    img.src = snapshotURL;
 }
 
 // ===============================================
@@ -620,7 +619,7 @@ async function init() {
     setInterval(fetchWeather, 600000);
     
     // Обновление камеры: частый refresh для квази-live во внешней сети
-    setInterval(loadCameraSnapshot, 1200);
+    setInterval(loadCameraSnapshot, 800);
     
     console.log('✅ Dashboard initialized successfully!');
 }
