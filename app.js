@@ -5,8 +5,10 @@ const CONFIG = {
     baseURL: 'https://planter.103.74.92.75.nip.io',
     username: 'cam',
     password: 'CamAccess2026',
-    pollInterval: 10000, // 10 seconds
-    chartMaxPoints: 100
+    pollInterval: 10000,
+    chartMaxPoints: 100,
+    weatherLat: 55.9657,
+    weatherLon: 37.7658
 };
 
 // ===============================================
@@ -99,6 +101,23 @@ async function sendCommand(action, extra = {}) {
     return response.json();
 }
 
+async function fetchWeather() {
+    try {
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${CONFIG.weatherLat}&longitude=${CONFIG.weatherLon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation`;
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        const c = data.current || {};
+        const el = document.getElementById('weatherNow');
+        if (el) {
+            el.textContent = `Сейчас: ${c.temperature_2m ?? '—'}°C, влажность ${c.relative_humidity_2m ?? '—'}%, ветер ${c.wind_speed_10m ?? '—'} м/с, осадки ${c.precipitation ?? '—'} мм`;
+        }
+    } catch (e) {
+        const el = document.getElementById('weatherNow');
+        if (el) el.textContent = 'Погода временно недоступна';
+    }
+}
+
 function loadCameraSnapshot() {
     const img = document.getElementById('cameraSnapshot');
     const overlay = document.getElementById('snapshotOverlay');
@@ -180,18 +199,38 @@ function updateKPICards(data) {
     document.getElementById('airHumidity').textContent = formatNumber(data.air_humidity_pct);
     document.getElementById('soilRaw').textContent = (data.soil_raw ?? '—');
 
-    const mode = data.mode || 'AUTO';
+    const modeRaw = data.mode || 'AUTO';
+    const mode = modeRaw === 'MANUAL' ? 'Ручной' : 'Авто';
     const pumpOn = !!data.pump_on;
-    const trig = data.trigger_reason || '—';
+    const trigRaw = data.trigger_reason || '—';
+    const trigMap = {
+      heartbeat: 'Периодический отчёт',
+      manual_start: 'Ручной запуск',
+      manual_stop: 'Ручная остановка',
+      manual_timeout_stop: 'Ручной стоп по таймеру',
+      auto_start_low_moisture: 'Автозапуск: низкая влажность',
+      auto_stop_target_reached: 'Автостоп: цель достигнута',
+      auto_stop_safety_timeout: 'Автостоп: лимит времени',
+      auto_mode_enabled: 'Включён авто режим',
+      manual_mode_enabled: 'Включён ручной режим'
+    };
+    const trig = trigMap[trigRaw] || trigRaw;
+
     const status = document.getElementById('pumpStatusText');
-    if (status) status.textContent = `Насос: ${pumpOn ? 'ВКЛЮЧЕН' : 'ВЫКЛЮЧЕН'} | Режим: ${mode} | Триггер: ${trig}`;
+    if (status) status.textContent = `Насос: ${pumpOn ? 'ВКЛЮЧЕН' : 'ВЫКЛЮЧЕН'} | Режим: ${mode} | Событие: ${trig}`;
 
     const bA = document.getElementById('btnModeAuto');
     const bM = document.getElementById('btnModeManual');
     if (bA && bM) {
-      bA.style.outline = mode === 'AUTO' ? '3px solid #00c853' : 'none';
-      bM.style.outline = mode === 'MANUAL' ? '3px solid #ff9800' : 'none';
+      bA.style.outline = modeRaw === 'AUTO' ? '3px solid #00c853' : 'none';
+      bM.style.outline = modeRaw === 'MANUAL' ? '3px solid #ff9800' : 'none';
     }
+
+    const m = Number(data.moisture_pct || 0);
+    const bar = document.getElementById('moistureBar');
+    const txt = document.getElementById('moistureLevelText');
+    if (bar) bar.style.width = `${Math.max(0, Math.min(100, m))}%`;
+    if (txt) txt.textContent = m < 25 ? 'Критично сухо' : m < 38 ? 'Суховато' : m <= 80 ? 'Норма' : 'Переувлажнение';
 }
 
 function updateRecommendations(moisturePct) {
@@ -550,9 +589,11 @@ async function init() {
     
     // Load camera snapshot
     loadCameraSnapshot();
+    await fetchWeather();
     
     // Start polling
     setInterval(updateDashboard, CONFIG.pollInterval);
+    setInterval(fetchWeather, 600000);
     
     // Refresh camera snapshot every 30 seconds
     setInterval(loadCameraSnapshot, 30000);

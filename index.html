@@ -74,10 +74,19 @@
                     <p class="recommendation-text" id="pumpStatusText">Насос: — | Режим: — | Триггер: —</p>
                 </div>
                 <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
-                    <button class="btn btn-secondary" id="btnModeAuto">AUTO</button>
-                    <button class="btn btn-secondary" id="btnModeManual">MANUAL</button>
-                    <button class="btn btn-primary" id="btnPumpStart">Старт 8с</button>
-                    <button class="btn" id="btnPumpStop" style="background:#ef4444;color:#fff;">Стоп</button>
+                    <button class="btn btn-secondary" id="btnModeAuto">Авто</button>
+                    <button class="btn btn-secondary" id="btnModeManual">Ручной</button>
+                    <button class="btn btn-primary" id="btnPumpStart">Полив 8с</button>
+                    <button class="btn" id="btnPumpStop" style="background:#ef4444;color:#fff;">Остановить</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="recommendations" id="weatherPanel" style="margin-bottom:1rem;">
+            <div class="recommendation-content" style="justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;">
+                <div>
+                    <h3 class="recommendation-title">Погода (Самороково/Мытищи)</h3>
+                    <p class="recommendation-text" id="weatherNow">Загрузка погодных условий...</p>
                 </div>
             </div>
         </section>
@@ -98,6 +107,13 @@
             <h2 class="section-title">История за 24 часа</h2>
             <div class="chart-container">
                 <canvas id="historyChart"></canvas>
+            </div>
+            <div class="diagnostic-item" style="margin-top:1rem;">
+                <span class="diagnostic-label">Инфографика влажности:</span>
+                <span class="diagnostic-value" id="moistureLevelText">—</span>
+            </div>
+            <div style="height:14px;background:#e5e7eb;border-radius:999px;overflow:hidden;">
+                <div id="moistureBar" style="height:100%;width:0%;background:linear-gradient(90deg,#ef4444,#f59e0b,#10b981);"></div>
             </div>
         </section>
 
