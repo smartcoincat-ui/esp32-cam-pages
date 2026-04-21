@@ -102,19 +102,36 @@ async function sendCommand(action, extra = {}) {
 }
 
 async function fetchWeather() {
+    const el = document.getElementById('weatherNow');
     try {
-        const url = `${CONFIG.baseURL}/api/weather?lat=${CONFIG.weatherLat}&lon=${CONFIG.weatherLon}`;
-        const response = await fetch(url, { headers: { 'Authorization': getAuthHeader(), 'Accept': 'application/json' } });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const data = await response.json();
-        const c = data.current || {};
-        const el = document.getElementById('weatherNow');
-        if (el) {
-            el.textContent = `Сейчас: ${c.temperature_2m ?? '—'}°C, влажность ${c.relative_humidity_2m ?? '—'}%, ветер ${c.wind_speed_10m ?? '—'} м/с, осадки ${c.precipitation ?? '—'} мм`;
+        // 1) Пробуем backend (если реализован)
+        const backendUrl = `${CONFIG.baseURL}/api/weather?lat=${CONFIG.weatherLat}&lon=${CONFIG.weatherLon}`;
+        const backendResp = await fetch(backendUrl, { headers: { 'Authorization': getAuthHeader(), 'Accept': 'application/json' } });
+        if (backendResp.ok) {
+            const data = await backendResp.json();
+            const c = data.current || {};
+            if (el) el.textContent = `Сейчас: ${c.temperature_2m ?? '—'}°C, влажность ${c.relative_humidity_2m ?? '—'}%, ветер ${c.wind_speed_10m ?? '—'} м/с, осадки ${c.precipitation ?? '—'} мм`;
+            return;
         }
-    } catch (e) {
-        const el = document.getElementById('weatherNow');
-        if (el) el.textContent = 'Погода временно недоступна';
+
+        // 2) Fallback напрямую в Open-Meteo + Air Quality
+        throw new Error('backend-weather-unavailable');
+    } catch (_) {
+        try {
+            const wUrl = `https://api.open-meteo.com/v1/forecast?latitude=${CONFIG.weatherLat}&longitude=${CONFIG.weatherLon}&current=temperature_2m,relative_humidity_2m,surface_pressure,wind_speed_10m,precipitation`;
+            const aUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${CONFIG.weatherLat}&longitude=${CONFIG.weatherLon}&current=european_aqi,pm10,pm2_5`;
+            const [wResp, aResp] = await Promise.all([fetch(wUrl), fetch(aUrl)]);
+            const wData = wResp.ok ? await wResp.json() : {};
+            const aData = aResp.ok ? await aResp.json() : {};
+            const c = (wData && wData.current) || {};
+            const aq = (aData && aData.current) || {};
+
+            if (el) {
+                el.textContent = `Сейчас: ${c.temperature_2m ?? '—'}°C, влажность ${c.relative_humidity_2m ?? '—'}%, давление ${c.surface_pressure ?? '—'} hPa, ветер ${c.wind_speed_10m ?? '—'} м/с, осадки ${c.precipitation ?? '—'} мм, AQI ${aq.european_aqi ?? '—'}, PM2.5 ${aq.pm2_5 ?? '—'}, PM10 ${aq.pm10 ?? '—'}`;
+            }
+        } catch (e2) {
+            if (el) el.textContent = 'Погода временно недоступна';
+        }
     }
 }
 
