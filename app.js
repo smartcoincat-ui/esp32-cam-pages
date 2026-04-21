@@ -9,8 +9,8 @@ const CONFIG = {
     chartMaxPoints: 100,
     weatherLat: 55.9657,
     weatherLon: 37.7658,
-    cameraHost: 'http://192.168.0.101',
-    cameraStreamPath: ':81/stream',
+    cameraHost: 'https://cam.103.74.92.75.nip.io',
+    cameraStreamPath: '/stream',
     cameraCapturePath: '/capture'
 };
 
@@ -619,8 +619,8 @@ async function init() {
     setInterval(updateDashboard, CONFIG.pollInterval);
     setInterval(fetchWeather, 600000);
     
-    // Refresh camera snapshot every 30 seconds
-    setInterval(loadCameraSnapshot, 30000);
+    // Обновление камеры: частый refresh для квази-live во внешней сети
+    setInterval(loadCameraSnapshot, 1200);
     
     console.log('✅ Dashboard initialized successfully!');
 }
