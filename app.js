@@ -18,6 +18,7 @@ const CONFIG = {
 // GLOBAL STATE
 // ===============================================
 let chart = null;
+let cameraLoadedOnce = false;
 let chartData = {
     labels: [],
     moisture: [],
@@ -142,17 +143,22 @@ function loadCameraSnapshot() {
     const img = document.getElementById('cameraStream');
     const overlay = document.getElementById('snapshotOverlay');
 
-    overlay.classList.remove('hidden');
-    overlay.innerHTML = '<p>Загрузка видео...</p>';
+    if (!cameraLoadedOnce) {
+        overlay.classList.remove('hidden');
+        overlay.innerHTML = '<p>Загрузка видео...</p>';
+    }
 
     const timestamp = new Date().getTime();
     const snapshotURL = `${CONFIG.cameraHost}${CONFIG.cameraCapturePath}?t=${timestamp}`;
 
     img.onload = () => {
+        cameraLoadedOnce = true;
         overlay.classList.add('hidden');
     };
 
     img.onerror = () => {
+        cameraLoadedOnce = false;
+        overlay.classList.remove('hidden');
         overlay.innerHTML = '<p>❌ Камера недоступна</p>';
     };
 
