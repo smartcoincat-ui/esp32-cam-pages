@@ -103,8 +103,8 @@ async function sendCommand(action, extra = {}) {
 
 async function fetchWeather() {
     try {
-        const url = `https://api.open-meteo.com/v1/forecast?latitude=${CONFIG.weatherLat}&longitude=${CONFIG.weatherLon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation`;
-        const response = await fetch(url);
+        const url = `${CONFIG.baseURL}/api/weather?lat=${CONFIG.weatherLat}&lon=${CONFIG.weatherLon}`;
+        const response = await fetch(url, { headers: { 'Authorization': getAuthHeader(), 'Accept': 'application/json' } });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data = await response.json();
         const c = data.current || {};
@@ -218,6 +218,12 @@ function updateKPICards(data) {
 
     const status = document.getElementById('pumpStatusText');
     if (status) status.textContent = `Насос: ${pumpOn ? 'ВКЛЮЧЕН' : 'ВЫКЛЮЧЕН'} | Режим: ${mode} | Событие: ${trig}`;
+
+    const lamp = document.getElementById('pumpLamp');
+    if (lamp) {
+      lamp.textContent = pumpOn ? '● НАСОС ВКЛЮЧЕН' : '● НАСОС ВЫКЛЮЧЕН';
+      lamp.style.color = pumpOn ? '#00c853' : '#d50000';
+    }
 
     const bA = document.getElementById('btnModeAuto');
     const bM = document.getElementById('btnModeManual');
