@@ -140,7 +140,7 @@ async function fetchWeather() {
     }
 }
 
-function loadCameraSnapshot() {
+async function loadCameraSnapshot() {
     const img = document.getElementById('cameraStream');
     const overlay = document.getElementById('snapshotOverlay');
 
@@ -148,18 +148,31 @@ function loadCameraSnapshot() {
     overlay.innerHTML = '<p>Загрузка видео...</p>';
 
     const timestamp = new Date().getTime();
-    // Надёжный режим: частое обновление JPEG-кадра через внешний HTTPS домен
     const snapshotURL = `${CONFIG.cameraHost}${CONFIG.cameraCapturePath}?t=${timestamp}`;
 
-    img.onload = () => {
-        overlay.classList.add('hidden');
-    };
+    try {
+        const credentials = btoa(`${CONFIG.cameraAuthUser}:${CONFIG.cameraAuthPass}`);
+        const resp = await fetch(snapshotURL, {
+            headers: {
+                'Authorization': `Basic ${credentials}`,
+                'Accept': 'image/jpeg'
+            },
+            cache: 'no-store'
+        });
 
-    img.onerror = () => {
-        overlay.innerHTML = '<p>❌ Нет доступа к камере (проверь авторизацию cam)</p>';
-    };
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
 
-    img.src = snapshotURL;
+        const blob = await resp.blob();
+        const objUrl = URL.createObjectURL(blob);
+        const oldSrc = img.src;
+        img.onload = () => {
+            overlay.classList.add('hidden');
+            if (oldSrc.startsWith('blob:')) URL.revokeObjectURL(oldSrc);
+        };
+        img.src = objUrl;
+    } catch (e) {
+        overlay.innerHTML = '<p>❌ Камера недоступна</p>';
+    }
 }
 
 // ===============================================
