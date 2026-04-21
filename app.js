@@ -8,7 +8,10 @@ const CONFIG = {
     pollInterval: 10000,
     chartMaxPoints: 100,
     weatherLat: 55.9657,
-    weatherLon: 37.7658
+    weatherLon: 37.7658,
+    cameraHost: 'http://192.168.0.101',
+    cameraStreamPath: ':81/stream',
+    cameraCapturePath: '/capture'
 };
 
 // ===============================================
@@ -136,30 +139,28 @@ async function fetchWeather() {
 }
 
 function loadCameraSnapshot() {
-    const img = document.getElementById('cameraSnapshot');
+    const img = document.getElementById('cameraStream');
     const overlay = document.getElementById('snapshotOverlay');
-    
+
     overlay.classList.remove('hidden');
-    overlay.innerHTML = '<p>Загрузка...</p>';
-    
+    overlay.innerHTML = '<p>Подключение к live...</p>';
+
     const timestamp = new Date().getTime();
-    const snapshotURL = `${CONFIG.baseURL}/cam/capture?t=${timestamp}`;
-    
-    // Create a temporary image to test loading
-    const tempImg = new Image();
-    
-    tempImg.onload = () => {
-        img.src = snapshotURL;
+    const streamURL = `${CONFIG.cameraHost}${CONFIG.cameraStreamPath}?t=${timestamp}`;
+    const fallbackSnapshotURL = `${CONFIG.cameraHost}${CONFIG.cameraCapturePath}?t=${timestamp}`;
+
+    img.onload = () => {
         overlay.classList.add('hidden');
     };
-    
-    tempImg.onerror = () => {
-        overlay.innerHTML = '<p>❌ Не удалось загрузить снимок</p>';
+
+    img.onerror = () => {
+        // fallback на snapshot, если live недоступен/блокируется браузером
+        img.src = fallbackSnapshotURL;
+        overlay.innerHTML = '<p>Live недоступен, показан снимок</p>';
+        setTimeout(() => overlay.classList.add('hidden'), 1500);
     };
-    
-    // Set auth header for image (Note: Basic auth in img src is limited)
-    // For better security, consider proxying through your backend
-    tempImg.src = snapshotURL;
+
+    img.src = streamURL;
 }
 
 // ===============================================
@@ -579,7 +580,7 @@ function setupEventHandlers() {
 
     // Open stream button
     document.getElementById('openStream').addEventListener('click', () => {
-        const streamURL = `${CONFIG.baseURL}/cam/stream`;
+        const streamURL = `${CONFIG.cameraHost}${CONFIG.cameraStreamPath}`;
         window.open(streamURL, '_blank');
     });
 
