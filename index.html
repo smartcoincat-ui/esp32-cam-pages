@@ -37,14 +37,6 @@
                 </div>
             </div>
 
-            <div class="kpi-card">
-                <div class="kpi-icon">🌡️</div>
-                <div class="kpi-content">
-                    <p class="kpi-label">Температура почвы</p>
-                    <p class="kpi-value" id="soilTemp">—</p>
-                    <p class="kpi-unit">°C</p>
-                </div>
-            </div>
 
             <div class="kpi-card">
                 <div class="kpi-icon">🌤️</div>
@@ -70,6 +62,22 @@
                     <p class="kpi-label">Сырой сигнал</p>
                     <p class="kpi-value" id="soilRaw">—</p>
                     <p class="kpi-unit">единиц</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Pump Controls -->
+        <section class="recommendations" id="pumpPanel" style="margin-bottom:1rem;">
+            <div class="recommendation-content" style="justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;">
+                <div>
+                    <h3 class="recommendation-title">Режим и полив</h3>
+                    <p class="recommendation-text" id="pumpStatusText">Насос: — | Режим: — | Триггер: —</p>
+                </div>
+                <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+                    <button class="btn btn-secondary" id="btnModeAuto">AUTO</button>
+                    <button class="btn btn-secondary" id="btnModeManual">MANUAL</button>
+                    <button class="btn btn-primary" id="btnPumpStart">Старт 8с</button>
+                    <button class="btn" id="btnPumpStop" style="background:#ef4444;color:#fff;">Стоп</button>
                 </div>
             </div>
         </section>

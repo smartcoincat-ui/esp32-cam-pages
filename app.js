@@ -16,8 +16,8 @@ let chart = null;
 let chartData = {
     labels: [],
     moisture: [],
-    soilTemp: [],
-    airTemp: []
+    airTemp: [],
+    pumpOn: []
 };
 let lastUpdateTime = null;
 let isOnline = false;
@@ -83,6 +83,20 @@ async function fetchHistoryData(hours = 24) {
         console.error('Error fetching history data:', error);
         return null;
     }
+}
+
+async function sendCommand(action, extra = {}) {
+    const response = await fetch(`${CONFIG.baseURL}/api/command?api_key=change_me`, {
+        method: 'POST',
+        headers: {
+            'Authorization': getAuthHeader(),
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ device: 'planter-esp8266-pot1', action, ...extra })
+    });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return response.json();
 }
 
 function loadCameraSnapshot() {
@@ -162,10 +176,22 @@ function formatNumber(value, decimals = 1) {
 
 function updateKPICards(data) {
     document.getElementById('moisturePct').textContent = formatNumber(data.moisture_pct);
-    document.getElementById('soilTemp').textContent = formatNumber(data.soil_temp_c);
     document.getElementById('airTemp').textContent = formatNumber(data.air_temp_c);
     document.getElementById('airHumidity').textContent = formatNumber(data.air_humidity_pct);
     document.getElementById('soilRaw').textContent = (data.soil_raw ?? '—');
+
+    const mode = data.mode || 'AUTO';
+    const pumpOn = !!data.pump_on;
+    const trig = data.trigger_reason || '—';
+    const status = document.getElementById('pumpStatusText');
+    if (status) status.textContent = `Насос: ${pumpOn ? 'ВКЛЮЧЕН' : 'ВЫКЛЮЧЕН'} | Режим: ${mode} | Триггер: ${trig}`;
+
+    const bA = document.getElementById('btnModeAuto');
+    const bM = document.getElementById('btnModeManual');
+    if (bA && bM) {
+      bA.style.outline = mode === 'AUTO' ? '3px solid #00c853' : 'none';
+      bM.style.outline = mode === 'MANUAL' ? '3px solid #ff9800' : 'none';
+    }
 }
 
 function updateRecommendations(moisturePct) {
@@ -241,15 +267,6 @@ function initChart() {
                     yAxisID: 'y'
                 },
                 {
-                    label: 'Температура почвы (°C)',
-                    data: chartData.soilTemp,
-                    borderColor: '#f59e0b',
-                    backgroundColor: 'rgba(245, 158, 11, 0.1)',
-                    tension: 0.4,
-                    fill: true,
-                    yAxisID: 'y1'
-                },
-                {
                     label: 'Температура воздуха (°C)',
                     data: chartData.airTemp,
                     borderColor: '#10b981',
@@ -257,6 +274,15 @@ function initChart() {
                     tension: 0.4,
                     fill: false,
                     yAxisID: 'y1'
+                },
+                {
+                    label: 'Насос (1=ON)',
+                    data: chartData.pumpOn,
+                    borderColor: '#ef4444',
+                    backgroundColor: 'rgba(239, 68, 68, 0.08)',
+                    tension: 0.2,
+                    fill: false,
+                    yAxisID: 'y2'
                 }
             ]
         },
@@ -352,6 +378,12 @@ function initChart() {
                             family: 'Inter'
                         }
                     }
+                },
+                y2: {
+                    type: 'linear',
+                    display: false,
+                    min: 0,
+                    max: 1
                 }
             }
         }
@@ -368,8 +400,8 @@ function updateChartWithHistory(historyData) {
     // Clear existing data
     chartData.labels = [];
     chartData.moisture = [];
-    chartData.soilTemp = [];
     chartData.airTemp = [];
+    chartData.pumpOn = [];
     
     // Process history data
     
@@ -388,8 +420,8 @@ function updateChartWithHistory(historyData) {
             
             chartData.labels.push(timeLabel);
             chartData.moisture.push(reading.moisture_pct || null);
-            chartData.soilTemp.push(reading.soil_temp_c || null);
             chartData.airTemp.push(reading.air_temp_c || null);
+            chartData.pumpOn.push(reading.pump_on ? 1 : 0);
         }
     }
     
@@ -411,15 +443,15 @@ function addDataPointToChart(data) {
     // Add new data point
     chartData.labels.push(timeLabel);
     chartData.moisture.push(data.moisture_pct || null);
-    chartData.soilTemp.push(data.soil_temp_c || null);
     chartData.airTemp.push(data.air_temp_c || null);
+    chartData.pumpOn.push(data.pump_on ? 1 : 0);
     
     // Keep only last CONFIG.chartMaxPoints points
     if (chartData.labels.length > CONFIG.chartMaxPoints) {
         chartData.labels.shift();
         chartData.moisture.shift();
-        chartData.soilTemp.shift();
         chartData.airTemp.shift();
+        chartData.pumpOn.shift();
     }
     
     // Update chart
@@ -482,12 +514,22 @@ function setupEventHandlers() {
     document.getElementById('refreshSnapshot').addEventListener('click', () => {
         loadCameraSnapshot();
     });
-    
+
     // Open stream button
     document.getElementById('openStream').addEventListener('click', () => {
         const streamURL = `${CONFIG.baseURL}/cam/stream`;
         window.open(streamURL, '_blank');
     });
+
+    const modeAuto = document.getElementById('btnModeAuto');
+    const modeManual = document.getElementById('btnModeManual');
+    const pStart = document.getElementById('btnPumpStart');
+    const pStop = document.getElementById('btnPumpStop');
+
+    if (modeAuto) modeAuto.addEventListener('click', async () => { try { await sendCommand('set_mode', { mode: 'AUTO' }); await updateDashboard(); } catch(e){ console.error(e);} });
+    if (modeManual) modeManual.addEventListener('click', async () => { try { await sendCommand('set_mode', { mode: 'MANUAL' }); await updateDashboard(); } catch(e){ console.error(e);} });
+    if (pStart) pStart.addEventListener('click', async () => { try { await sendCommand('pump_start', { duration_s: 8 }); await updateDashboard(); } catch(e){ console.error(e);} });
+    if (pStop) pStop.addEventListener('click', async () => { try { await sendCommand('pump_stop'); await updateDashboard(); } catch(e){ console.error(e);} });
 }
 
 // ===============================================
