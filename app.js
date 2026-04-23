@@ -19,6 +19,7 @@ const CONFIG = {
 // ===============================================
 let chart = null;
 let cameraLoadedOnce = false;
+let lastFrameAt = null;
 let chartData = {
     labels: [],
     moisture: [],
@@ -153,13 +154,18 @@ function loadCameraSnapshot() {
 
     img.onload = () => {
         cameraLoadedOnce = true;
+        lastFrameAt = Date.now();
         overlay.classList.add('hidden');
+        const h = document.getElementById('camHealth');
+        if (h) h.textContent = '🟢 Онлайн';
     };
 
     img.onerror = () => {
         cameraLoadedOnce = false;
         overlay.classList.remove('hidden');
         overlay.innerHTML = '<p>❌ Камера недоступна</p>';
+        const h = document.getElementById('camHealth');
+        if (h) h.textContent = '🔴 Оффлайн';
     };
 
     img.src = snapshotURL;
@@ -622,7 +628,13 @@ async function init() {
     setInterval(fetchWeather, 600000);
     
     // Обновление камеры: частый refresh для квази-live во внешней сети
-    setInterval(loadCameraSnapshot, 800);
+    setInterval(() => {
+        loadCameraSnapshot();
+        const h = document.getElementById('camHealth');
+        if (h && lastFrameAt && Date.now() - lastFrameAt > 5000) {
+            h.textContent = '🟠 Нет свежих кадров > 5с';
+        }
+    }, 800);
     
     console.log('✅ Dashboard initialized successfully!');
 }
