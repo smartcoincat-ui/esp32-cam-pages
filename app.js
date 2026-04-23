@@ -106,6 +106,16 @@ async function sendCommand(action, extra = {}) {
     return response.json();
 }
 
+async function setCamLight(level) {
+    const val = Math.max(0, Math.min(255, Number(level) || 0));
+    const url = `${CONFIG.cameraHost}/control?var=led_intensity&val=${val}`;
+    await fetch(url, { method: 'GET', cache: 'no-store', mode: 'no-cors' });
+    const lv = document.getElementById('lightValue');
+    const sl = document.getElementById('lightSlider');
+    if (lv) lv.textContent = String(val);
+    if (sl) sl.value = String(val);
+}
+
 async function fetchWeather() {
     const el = document.getElementById('weatherNow');
     try {
@@ -601,6 +611,21 @@ function setupEventHandlers() {
     if (modeManual) modeManual.addEventListener('click', async () => { try { await sendCommand('set_mode', { mode: 'MANUAL' }); await updateDashboard(); } catch(e){ console.error(e);} });
     if (pStart) pStart.addEventListener('click', async () => { try { await sendCommand('pump_start', { duration_s: 8 }); await updateDashboard(); } catch(e){ console.error(e);} });
     if (pStop) pStop.addEventListener('click', async () => { try { await sendCommand('pump_stop'); await updateDashboard(); } catch(e){ console.error(e);} });
+
+    const l0 = document.getElementById('lightOff');
+    const l50 = document.getElementById('light50');
+    const l100 = document.getElementById('light100');
+    const slider = document.getElementById('lightSlider');
+    if (l0) l0.addEventListener('click', async () => { try { await setCamLight(0); } catch(e){ console.error(e);} });
+    if (l50) l50.addEventListener('click', async () => { try { await setCamLight(128); } catch(e){ console.error(e);} });
+    if (l100) l100.addEventListener('click', async () => { try { await setCamLight(255); } catch(e){ console.error(e);} });
+    if (slider) {
+      slider.addEventListener('input', () => {
+        const lv = document.getElementById('lightValue');
+        if (lv) lv.textContent = slider.value;
+      });
+      slider.addEventListener('change', async () => { try { await setCamLight(slider.value); } catch(e){ console.error(e);} });
+    }
 }
 
 // ===============================================

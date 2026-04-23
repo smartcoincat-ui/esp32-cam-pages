@@ -132,6 +132,16 @@
                     <button class="btn btn-primary" id="refreshSnapshot">🔄 Переподключить live</button>
                     <button class="btn btn-secondary" id="openStream">📹 Открыть поток отдельно</button>
                 </div>
+                <div class="camera-controls" style="margin-top:8px;">
+                    <button class="btn btn-secondary" id="lightOff">🌑 Свет 0%</button>
+                    <button class="btn btn-secondary" id="light50">🌓 Свет 50%</button>
+                    <button class="btn btn-secondary" id="light100">🌕 Свет 100%</button>
+                </div>
+                <div class="diagnostic-item" style="margin-top:8px; align-items:center;">
+                    <span class="diagnostic-label">Яркость подсветки</span>
+                    <input id="lightSlider" type="range" min="0" max="255" value="0" style="width:180px;">
+                    <span class="diagnostic-value" id="lightValue">0</span>
+                </div>
                 <div class="diagnostic-item" style="margin-top:10px;">
                     <span class="diagnostic-label">Камера</span>
                     <span class="diagnostic-value" id="camHealth">⏳ Проверка...</span>
