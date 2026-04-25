@@ -76,11 +76,21 @@ async function refresh(){
   drawChart('chartAirH','H',labels,pts.map(x=>Number(x.air_humidity_pct)||null),'#22c55e');
 
   try {
+    // 1) Backend weather
     const w=await jget(`${CONFIG.baseURL}/api/weather`);
     const c=w.current||{};
     qs('weatherNow').textContent=`🌡 ${c.temperature_2m ?? '—'}°C   💧 ${c.relative_humidity_2m ?? '—'}%   💨 ${c.wind_speed_10m ?? '—'} м/с   🌧 ${c.precipitation ?? '—'} мм`;
   } catch {
-    qs('weatherNow').textContent='Погода временно недоступна';
+    try {
+      // 2) Fallback direct Open-Meteo
+      const r=await fetch('https://api.open-meteo.com/v1/forecast?latitude=55.9657&longitude=37.7658&current=temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation', {cache:'no-store'});
+      if(!r.ok) throw new Error('open-meteo');
+      const w=await r.json();
+      const c=w.current||{};
+      qs('weatherNow').textContent=`🌡 ${c.temperature_2m ?? '—'}°C   💧 ${c.relative_humidity_2m ?? '—'}%   💨 ${c.wind_speed_10m ?? '—'} м/с   🌧 ${c.precipitation ?? '—'} мм`;
+    } catch {
+      qs('weatherNow').textContent='Погода временно недоступна';
+    }
   }
 
   try{
