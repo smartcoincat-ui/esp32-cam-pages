@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Умный горшок — v2</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="wrap">
+    <header class="top card">
+      <div>
+        <h1>🍓 ОГОРОДНИК-САДИСТ АНЕЧКА И ЕЁ КЛУБНИЧКА</h1>
+        <p class="sub">Современный мониторинг и управление через ESP32 + Home Assistant</p>
+      </div>
+      <div class="statusPills">
+        <span id="pillCam" class="pill">🎥 Камера: …</span>
+        <span id="pillMode" class="pill">🤖 Режим: …</span>
+        <span id="pillPump" class="pill">💧 Насос: …</span>
+      </div>
+    </header>
+
+    <section class="weather card">
+      <h2>🌤 Погода — Самороково / Мытищи</h2>
+      <div id="weatherNow" class="weatherNow">Загрузка погоды…</div>
+    </section>
+
+    <section class="kpiGrid">
+      <div class="card kpi"><div class="k">💧 Влажность почвы</div><div id="kMoisture" class="v">—%</div></div>
+      <div class="card kpi"><div class="k">🌡 Температура воздуха</div><div id="kAirT" class="v">—°C</div></div>
+      <div class="card kpi"><div class="k">💨 Влажность воздуха</div><div id="kAirH" class="v">—%</div></div>
+      <div class="card kpi"><div class="k">🔢 Soil RAW</div><div id="kRaw" class="v">—</div></div>
+      <div class="card kpi"><div class="k">🧭 Последний триггер</div><div id="kTrigger" class="v small">—</div></div>
+    </section>
+
+    <section class="mainGrid">
+      <article class="card cameraCard">
+        <h2>🎥 Камера ESP32-CAM</h2>
+        <img id="camImg" alt="camera" />
+        <div class="cameraRow">
+          <button id="btnReconnect">🔄 Обновить</button>
+          <button id="btnOpenStream">📹 Поток</button>
+        </div>
+      </article>
+
+      <article class="card controlCard">
+        <h2>🕹 Управление</h2>
+        <div class="btnGrid">
+          <button id="btnAuto">🤖 AUTO</button>
+          <button id="btnManual">✋ MANUAL</button>
+          <button id="btnPumpOn">💧 ПОЛИВ ON</button>
+          <button id="btnPumpOff">🛑 ПОЛИВ OFF</button>
+        </div>
+
+        <h3>🔦 Подсветка камеры</h3>
+        <div class="btnGrid light">
+          <button id="light0">🌑 0%</button>
+          <button id="light50">🌓 50%</button>
+          <button id="light100">🌕 100%</button>
+        </div>
+        <div class="sliderRow">
+          <input id="lightSlider" type="range" min="0" max="255" value="0"/>
+          <span id="lightVal">0</span>
+        </div>
+      </article>
+    </section>
+
+    <section class="chartsGrid">
+      <article class="card"><h2>📈 История 24ч — Температура воздуха</h2><canvas id="chartTemp"></canvas></article>
+      <article class="card"><h2>💧 История 24ч — Влажность почвы</h2><canvas id="chartMoist"></canvas></article>
+      <article class="card"><h2>💨 История 24ч — Влажность воздуха</h2><canvas id="chartAirH"></canvas></article>
+    </section>
+
+    <section class="card">
+      <h2>🧾 Последние события</h2>
+      <div id="events" class="events">Загрузка…</div>
+    </section>
+  </div>
+
+  <script src="./app.js"></script>
+</body>
+</html>
