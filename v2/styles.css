@@ -13,4 +13,6 @@ button{border:0;border-radius:10px;padding:10px 12px;font-weight:700;cursor:poin
 .sliderRow input{flex:1}
 .chartsGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 .events{display:grid;gap:6px;font-size:14px}.ev{padding:8px;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0}
-@media (max-width:980px){.kpiGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.mainGrid,.chartsGrid{grid-template-columns:1fr}.top{flex-direction:column;align-items:flex-start}}
+.infoRows{display:grid;gap:10px}.infoRow{display:grid;grid-template-columns:110px 1fr 70px;gap:10px;align-items:center}
+.bar{height:12px;background:#e5e7eb;border-radius:999px;overflow:hidden}.fill{height:100%;width:0%}.fill.blue{background:#0ea5e9}.fill.green{background:#22c55e}.fill.orange{background:#f97316}.fill.red{background:#ef4444}
+@media (max-width:980px){.kpiGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.mainGrid,.chartsGrid{grid-template-columns:1fr}.top{flex-direction:column;align-items:flex-start}.infoRow{grid-template-columns:90px 1fr 56px}}

@@ -62,6 +62,15 @@ async function refresh(){
   qs('kRaw').textContent=p.soil_raw ?? '—';
   qs('kTrigger').textContent=ruTrigger(p.trigger_reason);
 
+  const m=Math.max(0,Math.min(100,Number(p.moisture_pct)||0));
+  const ah=Math.max(0,Math.min(100,Number(p.air_humidity_pct)||0));
+  const at=Math.max(0,Math.min(100,((Number(p.air_temp_c)||0)+10)*2)); // -10..40 => 0..100
+  const pump=p.pump_on?100:0;
+  qs('barMoisture').style.width=`${m}%`; qs('txtMoisture').textContent=`${m.toFixed(0)}%`;
+  qs('barAirHum').style.width=`${ah}%`; qs('txtAirHum').textContent=`${ah.toFixed(0)}%`;
+  qs('barAirTemp').style.width=`${at}%`; qs('txtAirTemp').textContent=`${fmt(p.air_temp_c,1)}°C`;
+  qs('barPump').style.width=`${pump}%`; qs('txtPump').textContent=p.pump_on?'ON':'OFF';
+
   qs('pillMode').textContent=`🤖 Режим: ${p.mode||'—'}`;
   qs('pillPump').textContent=`💧 Насос: ${(p.pump_on?'ВКЛ':'ВЫКЛ')}`;
 
